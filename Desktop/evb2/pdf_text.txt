@@ -1,0 +1,358 @@
+ELEVATESCALE TECHNOLOGIES PRIVATE LIMITED  ·  ELEVATEBOX ENGINEERING 
+Full-Stack Build     19 July 2026     One Focused Build
+FORMAT                  SUBMIT BY            EFFORT
+together, not just draw screens. Ship something small, correct, and honest. 
+A build challenge for engineers who can reason about how a whole system fits
+Approval System
+Controlled Document
+ENGINEERING CHALLENGE
+INDIA'S FIRST TECH STUDIO ENGINEERED TO STAY FLAT  ·  HYDERABAD 
+----------------Page (0) Break----------------
+ElevateBox · Engineering Challenge                                Page 2 / 14
+narrow comfort zone.
+problems.
+• Curiosity and willingness to learn outside a
+• Awareness of data integrity and consistency
+• Clear communication about tradeoffs.
+• Ability to use a database as the source of truth.
+cases.
+• Ability to model application state clearly.
+• Ability to think through failure cases and edge
+• Good understanding of client and server data flow.
+permissions.
+• Strong TypeScript fundamentals.• Understanding of authentication, roles, and
+Across your submission, we want to see engineers who can demonstrate:
+What we are looking for.
+SIGNAL · 02
+rest follows.
+overwriting fresh data, a document changing state with no record of who did it. If you internalise that, the
+challenge is about the actions your app should block: the wrong person publishing, a stale page
+Real systems are not defined by their happy path. They are defined by what they refuse to do. Most of this
+THE ONE THING TO UNDERSTAND
+recorded in an audit log.
+should never become published unless the right person approved it, and every important action must be
+This is a small app on purpose. Its job is to show us how you think. The core idea is one sentence: a document
+curiosity, and your ability to learn. A simple, correct solution beats an over-engineered one every time.
+You do not need to be an expert in every tool we use. We care more about engineering judgment, fundamentals,
+integrity, transactions, failure modes, and user experience.
+who can reason about how a system fits together: data flow, state management, permissions, database
+We are not looking for someone who can only build basic CRUD screens. We are looking for someone
+What this is about.
+READ THIS FIRST · 01
+----------------Page (1) Break----------------
+ElevateBox · Engineering Challenge                                Page 3 / 14
+You may adjust this workflow if you explain your reasoning clearly. But invalid transitions must never silently succeed.
+draft / submitted / approved / published → archived                Admin archives
+approved → published                Reviewer or admin publishes
+rejected → draft                  Author reopens to fix
+submitted → rejected                Reviewer rejects (comment required)
+submitted → approved                Reviewer approves
+draft → submitted                Author submits own document
+From to To                         Who triggers it
+VALID TRANSITIONS, WRITTEN OUT
+Figure 1. The document state machine. Filled node is public, dashed node is terminal.
+filled=public(viewerscansee)             dashed=terminal(archived)                validtransition
+rejected
+reopen
+(comment)
+reject
+draft        submitted       approved       published
+submit                   approve                    publish
+archive
+archived
+admincanarchivefromdraft,submitted,approvedorpublished
+Fillednodeispublic.Dashednodeisterminal.Anymovethatisnotanarrowhereisaninvalidtransitiontheservermustreject.
+DOCUMENTSTATEMACHINE
+reject it. Study this diagram before you write a line of code. It is the spine of the whole system.
+follow the arrows below. Any move that is not an arrow on this map is an invalid transition and your server must
+Every document you manage moves through a set of states. It cannot jump between them freely. It can only
+The workflow.
+THE PRODUCT IN ONE PICTURE · 03
+----------------Page (2) Break----------------
+ElevateBox · Engineering Challenge                                Page 4 / 14
+viewer@example.com          viewer
+admin@example.com          admin
+bob@example.com           reviewer
+alice@example.com          author
+Email                         Role
+SUGGESTED SEEDED LOGINS
+admin        Manage or archive documents.
+reviewer       Review submitted documents: approve or reject.
+author        Create and edit their own draft documents.
+viewer        View published documents only.
+Role           What they are allowed to do
+Four roles. You do not need a user management screen. Seeded users are perfectly fine.
+Roles and seeded users.
+THE CAST · 04
+----------------Page (3) Break----------------
+ElevateBox · Engineering Challenge                                Page 5 / 14
+where we see whether logging and ownership are baked in from the start or bolted on later.
+Clean data model, real input validation, a permission check, and an audit event, all from the very first write. This is
+THE POINT
+why.
+• An author cannot edit a draft they do not own, unless you deliberately design it differently and explain
+• Empty title or body is rejected.
+• Viewers cannot create. Authors can.
+RULES
+• Creation records an audit event.
+• The creating user becomes the owner or author.
+• A document has a title and a body. It starts in draft.
+BUILD
+As an author, I can create a draft document.
+Create A Draft Document
+2
+can hit your endpoint directly as the wrong user and it works, that is a fail.
+a button in the UI. The real engineering is refusing the request on the server even when the button is gone. If we
+We want to see that you know the difference between hiding a button and enforcing a permission. Anyone can hide
+THE POINT
+• No signup, password reset, email verification, or OAuth required.
+• Production-grade auth is not needed. Seeded users with a simple session are fine.
+RULES
+• Unauthenticated users cannot open private pages or run private actions.
+• The server enforces permissions based on the logged-in user.
+• The app identifies the current user and shows their name and role.
+BUILD
+As a user, I can log in as one of the seeded users.
+Log In As A Seeded User
+1
+spend your energy.
+enforced. The Point tells you exactly what we are reading for when we open your code, so you know where to
+Nine user stories. Each one has three parts. Build tells you what to make. Rules tells you what must be
+What you will build.
+THE BUILD, STORY BY STORY · 05
+----------------Page (4) Break----------------
+ElevateBox · Engineering Challenge                                Page 6 / 14
+against the current state, not assumed from the client.
+Workflow modelling and server-side transition checks. We are checking that the transition is validated on the server
+THE POINT
+valid transition.
+• A document already submitted, approved, published, or archived cannot be submitted again without a
+• Only the owner can submit. Empty documents cannot be submitted.
+RULES
+• It becomes read-only to the author while submitted. An audit event is recorded.
+• The document moves draft to submitted and appears in the reviewer queue.
+BUILD
+As an author, I can submit my draft for review.
+Submit A Document For Review
+4
+state the document is in.
+content must never be quietly changed. This tests whether your permission logic reads both who is asking and what
+State-aware editing. The same document must behave differently depending on which state it is in. Published
+THE POINT
+• If you add versioning or a create-new-draft-from-published flow, explain it.
+• Submitted, approved, published, or archived documents are not silently editable.
+• Only the owner can edit their draft.
+RULES
+• Each edit records an audit event.
+• The author can update title and body while the document is draft or rejected.
+BUILD
+As an author, I can edit my own draft document.
+Edit A Draft Document
+3
+----------------Page (5) Break----------------
+ElevateBox · Engineering Challenge                                Page 7 / 14
+must have no path, not even a guessed URL or a raw API call, to anything that is not published.
+Visibility rules, and the clean line between a private workflow document and public published content. A viewer
+THE POINT
+• Published documents are not directly editable. Viewers can only see published documents.
+cannot.
+• Only approved documents can be published. Draft, submitted, rejected, or archived documents
+RULES
+recorded.
+• The document moves approved to published and becomes visible to viewers. An audit event is
+BUILD
+As an admin or reviewer, I can publish an approved document.
+Publish An Approved Document
+6
+own document" is exactly the kind of two-part check that separates careful engineers from careless ones.
+Business rules that combine role and ownership at the same time. The rule "a reviewer may approve, but not their
+THE POINT
+• Rejection requires a comment. A document that is not submitted cannot be approved or rejected.
+• Only reviewers can approve or reject. Authors cannot approve their own documents.
+RULES
+and resubmit.
+• Approval and rejection record audit events. A rejected document returns to a state the author can edit
+• A reviewer can view submitted documents, approve one, or reject one with a comment.
+BUILD
+As a reviewer, I can approve or reject a submitted document.
+Review A Submitted Document
+5
+----------------Page (6) Break----------------
+ElevateBox · Engineering Challenge                                Page 8 / 14
+exotic edge case, it is Tuesday. Silent data loss here is one of the loudest red flags we look for.
+Awareness of stale client state and optimistic concurrency control. Two people acting on the same page is not an
+THE POINT
+stale writes with a conflict response.
+• Suggested approach: add a version column. Include the expected version in every mutation. Reject
+stays correct.
+• Carol's action must not silently overwrite Bob's approval. She sees a clear message and the final state
+• Bob approves it. Carol, from her now stale page, tries to reject it.
+• Scenario: Bob opens a submitted document. Carol opens the same document.
+BUILD
+As a user, I should not accidentally overwrite someone else's change.
+Handle Concurrent Updates
+8
+Show us they move as one unit.
+update and the log write can leave a published document with no record of who published it, the design is broken.
+Transactions and append-only history thinking. This is the heart of the challenge. If a crash between the state
+THE POINT
+• The system must never allow a document to change state without a matching audit event.
+• A state change and its audit event must be committed together, in one transaction.
+RULES
+status where applicable.
+• Each event records actor, action, timestamp, any comment or metadata, and the previous and new
+archived.
+• Each document has a chronological history: created, edited, submitted, approved, rejected, published,
+BUILD
+As a user with access to a document, I can view its history.
+View Audit History
+7
+----------------Page (7) Break----------------
+ElevateBox · Engineering Challenge                                Page 9 / 14
+and "delete from existence" are two very different operations in your head.
+Soft deletion and archival thinking. History is preserved, never destroyed. We want to see that "remove from view"
+THE POINT
+• Archived documents are not editable or publishable unless you explicitly support restoring them.
+• Only admins can archive.
+RULES
+in the database and history. An audit event is recorded.
+• An admin can archive documents. Archived documents leave the active workflow queues but still exist
+BUILD
+As an admin, I can archive a document.
+Archive A Document
+9
+----------------Page (8) Break----------------
+ElevateBox · Engineering Challenge                                Page 10 / 14
+Infra       AWS or Cloudflare, SST or PulumiNone needed. Local run is enough.
+API layer     Hono, if useful      Framework routes are fine
+Auth         Better Auth        Any auth library or a simple seeded login
+DB tool      Drizzle           Prisma, Kysely, raw SQL
+Database      Postgres           MySQL, SQLite, LibSQL
+Language      TypeScript         TypeScript (keep it typed)
+Framework     SvelteKit, Svelte 5   Next.js, Nuxt, any modern full-stack framework
+Layer        Preferred              Fine to swap for
+close to the preferred stack below, so being able to learn into this environment quickly is a plus.
+You choose the stack. What matters is that your choices let you show the system clearly. Our day-to-day work sits
+Tech stack.
+YOUR TOOLS · 07
+Stale updates never silently overwrite newer updates.
+State change and audit event share the same transaction.
+Every state-changing action creates an audit event.
+Archived documents are not editable through normal workflows.
+Only approved documents can be published.
+Rejection requires a comment.
+Authors cannot approve their own documents.
+Reviewers can only approve or reject submitted documents.
+Authors can only edit their own draft or rejected documents.
+Viewers can only see published documents.
+Permissions are checked on the server, not only in the UI.
+Users must be authenticated to perform private actions.
+submit.
+Every one of these must be enforced on the server, never only in the UI. Treat this as your checklist before you
+Required integrity rules.
+NON-NEGOTIABLE · 06
+----------------Page (9) Break----------------
+ElevateBox · Engineering Challenge                                Page 11 / 14
+Submitting code you do not understand is not.
+choice, where each invariant is enforced, how data flows, and what can go wrong. Using AI is fine.
+able to explain every important part of your code in detail without an agent: why you made each design
+intentional, not stitched together with obvious LLM smell. If we discuss your submission, you must be
+architecture, data model, permission boundaries, transactions, and failure handling must be coherent and
+You may use AI tools while building. We care about the final system and your understanding of it. The
+AI AND LLM POLICY
+----------------Page (10) Break----------------
+ElevateBox · Engineering Challenge                                Page 12 / 14
+further review.
+transactions, concurrency, data integrity, permissions, and failure modes, it will be rejected without
+Note: a polished UI-only project is usually not enough. If it does not clearly show awareness of
+• What you would improve with more time.
+• One part of the codebase where correctness really matters.
+• How the system handles invalid states or failed operations.
+• How transactions, concurrency, and failure modes are handled.
+• How authentication and authorization work, if applicable.
+• What the important invariants are.
+• Where the source of truth lives.
+• A link to the repository and a short explanation of what it does.
+challenge. If you do, include:
+If you already have a project that clearly demonstrates these skills, you may submit that instead of building the
+Prefer to submit an existing project?
+A SECOND ROUTE · 09
+that changed how you write software? This is optional, but it tells us how you learn.
+databases, networking, compilers, embedded, game dev, infrastructure, anything. What did it teach you
+Tell us about something technical you learned outside your usual web stack: Rust, Zig, Go, Linux,
+OPTIONAL QUESTION, IF YOU HAVE THE APPETITE
+8. What would need to change for a real production system?
+7. What would you improve with more time?
+6. What failure cases did you consider?
+5. How do you keep audit events consistent with document state changes?
+4. How do you prevent stale or conflicting updates?
+3. How do permissions work?
+2. Which invariants are enforced by the database, and which by application code?
+1. What are the most important invariants in your system?
+reasoning, not a long essay.
+DESIGN.md
+Include a short  , or a section in your README, answering these. Keep it concise. We want clear
+The design note.
+SHOW YOUR THINKING · 08
+----------------Page (11) Break----------------
+ElevateBox · Engineering Challenge                                Page 13 / 14
+forms.gle/AqiSXWCaZcRUfZDr9
+19 July 2026
+GOOGLE FORM
+DEADLINE
+signed in as you. Late or broken links will not be reviewed.
+The form and every link you share will be checked. Confirm your link opens for someone who is not
+Submit before the deadline
+03
+Screen recording link (if you chose Option B)          SHORT ANSWER
+Repository link (if you chose Option A)              SHORT ANSWER
+Email                                     SHORT ANSWER
+Mobile Number                                SHORT ANSWER
+Roll Number                                 SHORT ANSWER
+Full Name                                   SHORT ANSWER
+The form asks for the details below. Keep them accurate, this is how we reach you.
+Fill the Google Form
+02
+cannot evaluate it.       minimum, stand in for a live demo.
+we cannot run it locally from your README, wewith the link can view. This can accompany or, at a
+run tests if any, and the seeded login credentials. IfGoogle Drive or YouTube and set access so anyone
+environment variables, how to run the app, how todecisions out loud. Upload the recording to
+Bitbucket. Your README must include setup,the important parts of your code, explaining your
+Push to a public repo on GitHub, GitLab, orRecord your screen walking through the app and
+OPTION A · PUBLIC REPOSITORY      OPTION B · SCREEN RECORDING
+You can submit in either of two ways. Pick whichever shows your work best.
+Get your work ready to share
+01
+nothing gets lost.
+When you are done, submit through one simple Google Form. That is the only channel we accept, so that
+Submission.
+HOW TO SUBMIT · 10
+----------------Page (12) Break----------------
+ElevateBox · Engineering Challenge                                Page 14 / 14
+ElevateBox Engineering  ·  ElevateScale Technologies Private Limited  ·  elevatebox.in  ·  Hyderabad
+Build something small, correct, and honest. We are reading for judgment.
+COMPLEX ADMIN DASHBOARD   REAL DEPLOYMENT  PIXEL-PERFECT STYLING MOBILE-PERFECT LAYOUT
+SIGNUP FLOW  PASSWORD RESET   EMAIL SENDING OAUTH  FILE UPLOAD RICH TEXT EDITING
+Do not spend a single hour on any of these. They are explicitly out of scope.
+What you do not need to build.
+SAVE YOUR TIME · 12
+• An honest design note.      • App cannot be run from the README.
+• Tests around the important rules.• History deleted instead of preserved.
+• Thoughtful handling of stale state.• Stale updates overwriting newer data.
+• Useful error handling.       see.
+• Users reaching documents they should not
+events.
+• Transactions around changes and audit• Published documents silently editable.
+• Database constraints where they fit.• Invalid transitions allowed.
+• Server-side permission checks. • No audit log, or one that drifts out of sync.
+• Clear state transition logic. • Only hiding buttons, no server checks.
+STRONG SIGNALS                 RED FLAGS
+We are not primarily judging visual design. A simple UI is fine if the behaviour is correct and understandable.
+• Audit log design.         • Ability to explain tradeoffs.
+• Transaction handling.      • Code organisation.
+• Data modelling.          • UI clarity and usability.
+• Server-side authorization.    • TypeScript clarity.
+• Correctness of the workflow rules.• Handling of stale client state.
+What we evaluate.
+HOW WE READ YOUR CODE · 11
+----------------Page (13) Break----------------

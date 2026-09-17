@@ -1,0 +1,91 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  VIEWER
+  AUTHOR
+  REVIEWER
+  ADMIN
+}
+
+enum DocumentStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+  PUBLISHED
+  ARCHIVED
+}
+
+enum AuditAction {
+  CREATE
+  EDIT
+  SUBMIT
+  APPROVE
+  REJECT
+  REOPEN
+  PUBLISH
+  ARCHIVE
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String
+  role      Role     @default(VIEWER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  authoredDocuments    Document[] @relation("DocumentAuthor")
+  lastUpdatedDocuments Document[] @relation("DocumentLastUpdatedBy")
+  auditLogs            AuditLog[]
+
+  @@map("users")
+}
+
+model Document {
+  id              String         @id @default(uuid())
+  title           String
+  body            String
+  status          DocumentStatus @default(DRAFT)
+  version         Int            @default(1)
+  authorId        String
+  lastUpdatedById String
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  author        User       @relation("DocumentAuthor", fields: [authorId], references: [id])
+  lastUpdatedBy User       @relation("DocumentLastUpdatedBy", fields: [lastUpdatedById], references: [id])
+  auditLogs     AuditLog[]
+
+  @@index([status])
+  @@index([authorId])
+  @@index([id, version])
+  @@map("documents")
+}
+
+model AuditLog {
+  id             String          @id @default(uuid())
+  documentId     String
+  actorId        String
+  action         AuditAction
+  previousStatus DocumentStatus?
+  newStatus      DocumentStatus?
+  comment        String?
+  version        Int
+  timestamp      DateTime        @default(now())
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  actor    User     @relation(fields: [actorId], references: [id])
+
+  @@index([documentId])
+  @@index([actorId])
+  @@index([timestamp])
+  @@map("audit_logs")
+}

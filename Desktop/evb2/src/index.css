@@ -1,0 +1,135 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", "Geist Sans", system-ui, -apple-system, sans-serif;
+  --font-mono: "Geist Mono", monospace;
+  
+  --radius-lg: 0.75rem;
+  --radius-md: calc(0.75rem - 2px);
+  --radius-sm: calc(0.75rem - 4px);
+  
+  /* Primary Enterprise Monochrome */
+  --color-primary: #111111;
+  --color-primary-hover: #18181b;
+  --color-primary-foreground: #ffffff;
+  
+  /* Color System */
+  --color-background: #f8f9fa;
+  --color-foreground: #111827;
+  
+  --color-card: #ffffff;
+  --color-card-foreground: #111827;
+  
+  --color-popover: #ffffff;
+  --color-popover-foreground: #111827;
+  
+  --color-muted: #f1f5f9;
+  --color-muted-foreground: #64748b;
+  
+  --color-accent: #f4f4f5;
+  --color-accent-foreground: #18181b;
+  
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #ffffff;
+  
+  --color-border: #e2e8f0;
+  --color-input: #e2e8f0;
+  --color-ring: #111111;
+
+  /* Pastel Workflow Colors */
+  --color-pastel-draft: #f4f4f5;
+  --color-pastel-draft-text: #3f3f46;
+  --color-pastel-draft-border: #e4e4e7;
+
+  --color-pastel-submitted: #fff8e5;
+  --color-pastel-submitted-text: #92400e;
+  --color-pastel-submitted-border: #fde68a;
+
+  --color-pastel-approved: #ecfdf3;
+  --color-pastel-approved-text: #065f46;
+  --color-pastel-approved-border: #a7f3d0;
+
+  --color-pastel-rejected: #fef2f2;
+  --color-pastel-rejected-text: #991b1b;
+  --color-pastel-rejected-border: #fca5a5;
+
+  --color-pastel-published: #eefdf8;
+  --color-pastel-published-text: #047857;
+  --color-pastel-published-border: #6ee7b7;
+
+  --color-pastel-archived: #f4f4f5;
+  --color-pastel-archived-text: #3f3f46;
+  --color-pastel-archived-border: #e4e4e7;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+    outline-color: var(--color-ring);
+  }
+  
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+}
+
+/* Subtle Card Elevation Utilities */
+.card-pastel-draft {
+  background-color: #f4f4f5;
+  border-color: #e4e4e7;
+  color: #3f3f46;
+}
+
+.card-pastel-submitted {
+  background-color: #fff8e5;
+  border-color: #fde68a;
+  color: #92400e;
+}
+
+.card-pastel-approved {
+  background-color: #ecfdf3;
+  border-color: #a7f3d0;
+  color: #065f46;
+}
+
+.card-pastel-rejected {
+  background-color: #fef2f2;
+  border-color: #fca5a5;
+  color: #991b1b;
+}
+
+.card-pastel-published {
+  background-color: #eefdf8;
+  border-color: #6ee7b7;
+  color: #047857;
+}
+
+.card-pastel-archived {
+  background-color: #f4f4f5;
+  border-color: #e4e4e7;
+  color: #3f3f46;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f5f7fb;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
